@@ -339,38 +339,75 @@
 ;(rempick 4 '(coffee bar with whiskey))
 
 
-(define concat	
-  (lambda (lat1 lat2)
-    (cond
-      ((null? lat2) lat1)
-      ((null? lat1) lat2)
-      (else (cons (car lat1) (concat (cdr lat1) lat2))))))
-
-;(concat  '((coffee 4) 4 (bar 4 (with whiskey 4))) '((coffee 4) 4 (bar 4 (with whiskey 4))))
 
 (define consApplyDeepHeadApplyDeepTail
-  (lambda (fn lat args)
-    (cons (apply fn (append args (list (car lat)))) (apply fn (append args (list (cdr lat)))))))
+  (lambda (fn lat args #:mode [mode 'list])
+    (cond
+      ((eq? mode 'list) (cons (apply fn (append args (list (car lat)))) (apply fn (append args (list (cdr lat))))))
+      ((eq? mode 'plus) (+ (apply fn (append args (list (car lat)))) (apply fn (append args (list (cdr lat))))))
+      ((eq? mode 'and) (and (apply fn (append args (list (car lat)))) (apply fn (append args (list (cdr lat))))))
+      ((eq? mode 'or) (or (apply fn (append args (list (car lat)))) (apply fn (append args (list (cdr lat))))))
+      )))
 
 (define consApplyFlatHeadApplyDeepTail
-  (lambda (flat deep lat args)
-    (concat (apply flat (append args (list (list (car lat))))) (apply deep (append args (list (cdr lat)))))))
-
-(define consDeepOrFlatHeadDeepTail
-  (lambda (flat deep lat args)
-    (if (pair? (car lat)) (consApplyDeepHeadApplyDeepTail deep lat args) (consApplyFlatHeadApplyDeepTail flat deep lat args))))
-
-(define consDeepOrFlatHeadDeepTailNonNullish
-  (lambda (flat deep lat args)
+  (lambda (flat deep lat args #:mode [mode 'list])
     (cond
-      ((null? lat) '())
-      ((pair? (car lat)) (consApplyDeepHeadApplyDeepTail deep lat args))
-      (else (consApplyFlatHeadApplyDeepTail flat deep lat args)))))
+      ((eq? mode 'list) (append (apply flat (append args (list (list (car lat))))) (apply deep (append args (list (cdr lat))))))
+      ((eq? mode 'plus) (+ (apply flat (append args (list (list (car lat))))) (apply deep (append args (list (cdr lat))))))
+      ((eq? mode 'and) (and (apply flat (append args (list (list (car lat))))) (apply deep (append args (list (cdr lat))))))
+      ((eq? mode 'or) (or (apply flat (append args (list (list (car lat))))) (apply deep (append args (list (cdr lat))))))
+      )))
+
+(define consApplyDeepOrFlatHeadApplyDeepTail
+  (lambda (flat deep lat args #:mode [mode 'list])
+    (if (pair? (car lat)) (consApplyDeepHeadApplyDeepTail deep lat args #:mode mode) (consApplyFlatHeadApplyDeepTail flat deep lat args #:mode mode))))
+
+(define consApplyDeepOrFlatHeadApplyDeepTailWithNullishFallback
+  (lambda (flat deep nullFallback lat args #:mode [mode 'list])
+    (if 
+     (null? lat) nullFallback (consApplyDeepOrFlatHeadApplyDeepTail flat deep lat args #:mode mode))))
+  
 
 ; === deep rember
 (define rember*	
   (lambda (a lat)
-    (consDeepOrFlatHeadDeepTailNonNullish rember rember* lat (list a))
-     ))
+    (consApplyDeepOrFlatHeadApplyDeepTailWithNullishFallback rember rember* '() lat (list a))
+    ))
     
-(rember* 4 '(foo (coffee 4) 4 (bar 4 (with whiskey 4))))
+;(rember* 4 '(foo (coffee 4) 4 (bar 4 (with whiskey 4))))
+
+(define insertR*	
+  (lambda (new old lat)
+    (consApplyDeepOrFlatHeadApplyDeepTailWithNullishFallback insertR insertR* '() lat (list new old))
+    ))
+    
+(insertR* "new item" 4 '(foo (coffee 4) 4 (bar 4 (with whiskey 4))))
+
+(define occur*	
+  (lambda (a lat)
+    (consApplyDeepOrFlatHeadApplyDeepTailWithNullishFallback occur occur* 0 lat (list a) #:mode 'plus)
+    ))
+
+(occur*  4 '(4 foo 4 (coffee 4) 4 (bar 4 (with whiskey 4))))
+
+(define subst*	
+  (lambda (new old lat)
+    (consApplyDeepOrFlatHeadApplyDeepTailWithNullishFallback subst subst* '() lat (list new old))
+    ))
+
+(subst* 'bazz 4 '(4 foo 4 (coffee 4) 4 (bar 4 (with whiskey 4))))
+
+
+(define insertL*	
+  (lambda (new old lat)
+    (consApplyDeepOrFlatHeadApplyDeepTailWithNullishFallback insertL insertL* '() lat (list new old))
+    ))
+    
+(insertL* "new item" 4 '(foo (coffee 4) 4 (bar 4 (with whiskey 4))))
+
+(define member*?	
+  (lambda (a lat)
+    (consApplyDeepOrFlatHeadApplyDeepTailWithNullishFallback member? member*? #f lat (list a) #:mode 'or)
+    ))
+
+(member*?  4 '(foo (coffee) 3 (bar 2 (with whiskey 4))))
