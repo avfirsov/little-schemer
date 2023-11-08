@@ -421,14 +421,27 @@
 
 
 
-(define eqlist	
+(define eqlist?	
   (lambda (lat1 lat2)
     (cond
       ((and (null? lat1) (null? lat2)) #t)
       ((or (null? lat1) (null? lat2)) #f)
-      ((and (pair? (car lat1)) (pair? (car lat2))) (and (eqlist (car lat1) (car lat2)) (eqlist (cdr lat1) (cdr lat2))))
-      (else (and (eqan? (car lat1) (car lat2)) (eqlist (cdr lat1) (cdr lat2)))))))
+      (else (and (equal? (car lat1) (car lat2)) (eqlist? (cdr lat1) (cdr lat2)))))))
 ;(eqlist '(((bar 2 (with whiskey 4))) foo (coffee) 3) '(((bar 2 (with whiskey 4))) foo (coffee) 3))
 ;(eqlist '(2 4 3) '(2 4))
 ;(eqlist '(2 4) '(2 4 3))
 ;(eqlist '(2 4 3) '(2 4 3))
+
+
+(define equal	
+  (lambda (x y)
+    (if
+      (and (pair? x) (pair? y)) (eqlist? x y)
+      (and (eqan? x y)))))
+;(equal? '(((bar 2 (with whiskey 4))) foo (coffee) 3) '(((bar 2 (with whiskey 4))) foo (coffee) 3))
+;(equal? '(2 4 3) '(2 4))
+;(equal? '(2 4) '(2 4 3))
+;(equal? '(2 4 3) '(2 4 3))
+;(equal? 'foo 'foo)
+;(equal? 'foo '())
+;(equal? 4 42)
