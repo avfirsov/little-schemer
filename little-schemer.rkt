@@ -381,21 +381,21 @@
     (consApplyDeepOrFlatHeadApplyDeepTailWithNullishFallback insertR insertR* '() lat (list new old))
     ))
     
-(insertR* "new item" 4 '(foo (coffee 4) 4 (bar 4 (with whiskey 4))))
+;(insertR* "new item" 4 '(foo (coffee 4) 4 (bar 4 (with whiskey 4))))
 
 (define occur*	
   (lambda (a lat)
     (consApplyDeepOrFlatHeadApplyDeepTailWithNullishFallback occur occur* 0 lat (list a) #:mode 'plus)
     ))
 
-(occur*  4 '(4 foo 4 (coffee 4) 4 (bar 4 (with whiskey 4))))
+;(occur*  4 '(4 foo 4 (coffee 4) 4 (bar 4 (with whiskey 4))))
 
 (define subst*	
   (lambda (new old lat)
     (consApplyDeepOrFlatHeadApplyDeepTailWithNullishFallback subst subst* '() lat (list new old))
     ))
 
-(subst* 'bazz 4 '(4 foo 4 (coffee 4) 4 (bar 4 (with whiskey 4))))
+;(subst* 'bazz 4 '(4 foo 4 (coffee 4) 4 (bar 4 (with whiskey 4))))
 
 
 (define insertL*	
@@ -403,11 +403,32 @@
     (consApplyDeepOrFlatHeadApplyDeepTailWithNullishFallback insertL insertL* '() lat (list new old))
     ))
     
-(insertL* "new item" 4 '(foo (coffee 4) 4 (bar 4 (with whiskey 4))))
+;(insertL* "new item" 4 '(foo (coffee 4) 4 (bar 4 (with whiskey 4))))
 
 (define member*?	
   (lambda (a lat)
     (consApplyDeepOrFlatHeadApplyDeepTailWithNullishFallback member? member*? #f lat (list a) #:mode 'or)
     ))
 
-(member*?  4 '(foo (coffee) 3 (bar 2 (with whiskey 4))))
+;(member*?  4 '(foo (coffee) 3 (bar 2 (with whiskey 4))))
+
+(define leftmost	
+  (lambda (lat)
+    (if
+     (atom? (car lat)) (car lat) (leftmost (car lat)))))
+
+;(leftmost '(((bar 2 (with whiskey 4))) foo (coffee) 3))
+
+
+
+(define eqlist	
+  (lambda (lat1 lat2)
+    (cond
+      ((and (null? lat1) (null? lat2)) #t)
+      ((or (null? lat1) (null? lat2)) #f)
+      ((and (pair? (car lat1)) (pair? (car lat2))) (and (eqlist (car lat1) (car lat2)) (eqlist (cdr lat1) (cdr lat2))))
+      (else (and (eqan? (car lat1) (car lat2)) (eqlist (cdr lat1) (cdr lat2)))))))
+;(eqlist '(((bar 2 (with whiskey 4))) foo (coffee) 3) '(((bar 2 (with whiskey 4))) foo (coffee) 3))
+;(eqlist '(2 4 3) '(2 4))
+;(eqlist '(2 4) '(2 4 3))
+;(eqlist '(2 4 3) '(2 4 3))
