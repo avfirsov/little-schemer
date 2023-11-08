@@ -17,9 +17,10 @@
 ; проверяет вхождение a в lat
 (define member?
   (lambda (a lat)
-    (cond
-      ((null? lat) #f)
-      (else (or (eq? a (car lat)) (member? a (cdr lat)))))))
+    (if
+     (null? lat)
+     #f
+     (or (eq? a (car lat)) (member? a (cdr lat))))))
 
 
 (define potato 'potato)
@@ -44,10 +45,9 @@
 ; map(head)
 (define firsts
   (lambda (l)
-    (cond
-      ((null? l) '())
-      (else (cons (car (car l)) (firsts (cdr l))))
-      )))
+    (if
+     (null? l) '() (cons (car (car l)) (firsts (cdr l))))
+    ))
 
 ;(firsts '((potatoes carrots) (apples) (tea coffee)))
 
@@ -157,19 +157,21 @@
 
 (define ➕
   (lambda (x y)
-    (cond
-      ((zero? y) x)
-      (else (add1 (➕ x (sub1 y))))
-      )))
+    (if
+     (zero? y)
+     x
+     (add1 (➕ x (sub1 y))))
+    ))
 
 ;(➕ 41 1)
 
 (define ➖
   (lambda (x y)
-    (cond
-      ((zero? y) x)
-      (else (sub1 (➖ x (sub1 y))))
-      )))
+    (if
+     (zero? y)
+     x
+     (sub1 (➖ x (sub1 y))))
+    ))
 
 
 ;(➖ 1 41)
@@ -177,20 +179,22 @@
 
 (define addtup
   (lambda (tup)
-    (cond
-      ((null? tup) 0)
-      (else (➕ (car tup) (addtup (cdr tup))))
-      )))
+    (if
+     (null? tup)
+     0
+     (➕ (car tup) (addtup (cdr tup))))
+    ))
 
 ;(addtup '(1 2 3 4 5))
 
 
 (define ×
   (lambda (x y)
-    (cond
-      ((zero? y) 0)
-      (else (➕ x (× x (sub1 y))))
-      )))
+    (if
+     (zero? y)
+     0
+     (➕ x (× x (sub1 y))))
+    ))
 
 
 ;(* 2 5)
@@ -225,7 +229,6 @@
     (cond
       ((zero? y) #f)
       ((zero? x) #t)
-     
       (else (< (sub1 x) (sub1 y)))
       )))
 
@@ -243,9 +246,10 @@
 
 (define ↑	
   (lambda (x y)
-    (cond
-      ((zero? y) x)
-      (else (× x (↑ x (sub1 y)))))))
+    (if
+     (zero? y)
+     x
+     (× x (↑ x (sub1 y))))))
 
 ;(↑ 1 1)
 ;(↑ 1 2)
@@ -255,17 +259,19 @@
 
 (define ÷	
   (lambda (x y)
-    (cond
-      ((< x y) 0)
-      (else (add1 (÷ (➖ x y) y))))))
+    (if
+     (< x y)
+     0
+     (add1 (÷ (➖ x y) y)))))
 ;(÷ 15 4)
 
 
 (define length	
   (lambda (lat)
-    (cond
-      ((null? lat) 0)
-      (else (add1 (length (cdr lat)))))))
+    (if
+     (null? lat)
+     0
+     (add1 (length (cdr lat))))))
 ;(length '(coffee bar with whiskey))
 
 
@@ -273,9 +279,12 @@
 ; === at(n + 1)
 (define pick	
   (lambda (n lat)
-    (cond
-      ((= n 1) (car lat))
-      (else (pick (sub1 n) (cdr lat))))))
+    (if
+     (= n 1)
+     (car lat)
+     (pick
+      (sub1 n)
+      (cdr lat)))))
 ;(pick 4 '(coffee bar with whiskey))
 
 
@@ -314,12 +323,14 @@
 ; считает количество вхождений
 (define occur
   (lambda (a lat)
-    (cond
-      ((null? lat) 0)
-      (else (➕ (occur a (cdr lat))
-               (cond
-                 ((eqan? a (car lat)) 1)
-                 (else 0)))))))
+    (if
+     (null? lat)
+     0
+     (➕ (occur a (cdr lat))
+        (if
+         (eqan? a (car lat))
+         1
+         0)))))
 ;(occur 3 '(coffee 3 bar 3 with whiskey 3))
 
 
@@ -333,9 +344,14 @@
 ; === exclude(n + 1)
 (define rempick	
   (lambda (n lat)
-    (cond
-      ((one? n) (cdr lat))
-      (else (cons (car lat) (rempick (sub1 n) (cdr lat)))))))
+    (if
+     (one? n)
+     (cdr lat)
+     (cons
+      (car lat)
+      (rempick
+       (sub1 n)
+       (cdr lat))))))
 ;(rempick 4 '(coffee bar with whiskey))
 
 
@@ -360,7 +376,10 @@
 
 (define consApplyDeepOrFlatHeadApplyDeepTail
   (lambda (flat deep lat args #:mode [mode 'list])
-    (if (pair? (car lat)) (consApplyDeepHeadApplyDeepTail deep lat args #:mode mode) (consApplyFlatHeadApplyDeepTail flat deep lat args #:mode mode))))
+    (if
+     (pair? (car lat))
+     (consApplyDeepHeadApplyDeepTail deep lat args #:mode mode)
+     (consApplyFlatHeadApplyDeepTail flat deep lat args #:mode mode))))
 
 (define consApplyDeepOrFlatHeadApplyDeepTailWithNullishFallback
   (lambda (flat deep nullFallback lat args #:mode [mode 'list])
@@ -436,8 +455,9 @@
 (define equal	
   (lambda (x y)
     (if
-      (and (pair? x) (pair? y)) (eqlist? x y)
-      (and (eqan? x y)))))
+     (and (pair? x) (pair? y))
+     (eqlist? x y)
+     (and (eqan? x y)))))
 ;(equal? '(((bar 2 (with whiskey 4))) foo (coffee) 3) '(((bar 2 (with whiskey 4))) foo (coffee) 3))
 ;(equal? '(2 4 3) '(2 4))
 ;(equal? '(2 4) '(2 4 3))
