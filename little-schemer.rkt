@@ -20,7 +20,7 @@
     (if
      (null? lat)
      #f
-     (or (eq? a (car lat)) (member? a (cdr lat))))))
+     (or (equal? a (car lat)) (member? a (cdr lat))))))
 
 
 (define potato 'potato)
@@ -35,7 +35,7 @@
   (lambda (a lat)
     (cond
       ((null? lat)  '())
-      ((eq? (car lat) a) (cdr lat))
+      ((equal? (car lat) a) (cdr lat))
       (else (cons (car lat) (rember a (cdr lat))))
       )))
 
@@ -56,7 +56,7 @@
   (lambda (new old lat)
     (cond
       ((null? lat) '())
-      ((eq? (car lat) old) (cons (car lat) (cons new (cdr lat))))
+      ((equal? (car lat) old) (cons (car lat) (cons new (cdr lat))))
       (else (cons (car lat) (insertR new old (cdr lat))))
       )))
 
@@ -69,7 +69,7 @@
   (lambda (new old lat)
     (cond
       ((null? lat) '())
-      ((eq? (car lat) old) (cons new lat))
+      ((equal? (car lat) old) (cons new lat))
       (else (cons (car lat) (insertL new old (cdr lat))))
       )))
 
@@ -81,7 +81,7 @@
   (lambda (new old lat)
     (cond
       ((null? lat) '())
-      ((eq? (car lat) old) (cons new (cdr lat)))
+      ((equal? (car lat) old) (cons new (cdr lat)))
       (else (cons (car lat) (subst new old (cdr lat))))
       )))
 
@@ -94,7 +94,7 @@
   (lambda (new old1 old2 lat)
     (cond
       ((null? lat) '())
-      ((or (eq? (car lat) old1) (eq? (car lat) old2) ) (cons new (cdr lat)))
+      ((or (equal? (car lat) old1) (equal? (car lat) old2) ) (cons new (cdr lat)))
       (else (cons (car lat) (subst new old1 old2 (cdr lat))))
       )))
 
@@ -106,7 +106,7 @@
   (lambda (a lat)
     (cond
       ((null? lat) '())
-      ((eq? (car lat) a) (multirember a (cdr lat)))
+      ((equal? (car lat) a) (multirember a (cdr lat)))
       (else (cons (car lat) (multirember a (cdr lat))))
       )))
 
@@ -117,7 +117,7 @@
   (lambda (new old lat)
     (cond
       ((null? lat) '())
-      ((eq? (car lat) old) (cons (car lat) (cons new (multiinsertR new old (cdr lat)))))
+      ((equal? (car lat) old) (cons (car lat) (cons new (multiinsertR new old (cdr lat)))))
       (else (cons (car lat) (multiinsertR new old (cdr lat))))
       )))
 
@@ -130,7 +130,7 @@
   (lambda (new old lat)
     (cond
       ((null? lat) '())
-      ((eq? (car lat) old) (cons new (multisubst new old (cdr lat))))
+      ((equal? (car lat) old) (cons new (multisubst new old (cdr lat))))
       (else (cons (car lat) (multisubst new old (cdr lat))))
       )))
 
@@ -150,10 +150,6 @@
     (+ x 1)))
 
 
-(define zero?
-  (lambda (x)
-    (eq? (add1 x) 1) 
-    ))
 
 (define ➕
   (lambda (x y)
@@ -308,7 +304,7 @@
       (else (allNums (cdr lat))))))
 ;(allNums '(coffee 3 bar 5 with whiskey 6))
 
-
+; сравнивает числа, атомы и списки (по ссылке)
 (define eqan?
   (lambda (x y)
     (cond
@@ -328,7 +324,7 @@
      0
      (➕ (occur a (cdr lat))
         (if
-         (eqan? a (car lat))
+         (equal? a (car lat))
          1
          0)))))
 ;(occur 3 '(coffee 3 bar 3 with whiskey 3))
@@ -359,19 +355,19 @@
 (define consApplyDeepHeadApplyDeepTail
   (lambda (fn lat args #:mode [mode 'list])
     (cond
-      ((eq? mode 'list) (cons (apply fn (append args (list (car lat)))) (apply fn (append args (list (cdr lat))))))
-      ((eq? mode 'plus) (+ (apply fn (append args (list (car lat)))) (apply fn (append args (list (cdr lat))))))
-      ((eq? mode 'and) (and (apply fn (append args (list (car lat)))) (apply fn (append args (list (cdr lat))))))
-      ((eq? mode 'or) (or (apply fn (append args (list (car lat)))) (apply fn (append args (list (cdr lat))))))
+      ((equal? mode 'list) (cons (apply fn (append args (list (car lat)))) (apply fn (append args (list (cdr lat))))))
+      ((equal? mode 'plus) (+ (apply fn (append args (list (car lat)))) (apply fn (append args (list (cdr lat))))))
+      ((equal? mode 'and) (and (apply fn (append args (list (car lat)))) (apply fn (append args (list (cdr lat))))))
+      ((equal? mode 'or) (or (apply fn (append args (list (car lat)))) (apply fn (append args (list (cdr lat))))))
       )))
 
 (define consApplyFlatHeadApplyDeepTail
   (lambda (flat deep lat args #:mode [mode 'list])
     (cond
-      ((eq? mode 'list) (append (apply flat (append args (list (list (car lat))))) (apply deep (append args (list (cdr lat))))))
-      ((eq? mode 'plus) (+ (apply flat (append args (list (list (car lat))))) (apply deep (append args (list (cdr lat))))))
-      ((eq? mode 'and) (and (apply flat (append args (list (list (car lat))))) (apply deep (append args (list (cdr lat))))))
-      ((eq? mode 'or) (or (apply flat (append args (list (list (car lat))))) (apply deep (append args (list (cdr lat))))))
+      ((equal? mode 'list) (append (apply flat (append args (list (list (car lat))))) (apply deep (append args (list (cdr lat))))))
+      ((equal? mode 'plus) (+ (apply flat (append args (list (list (car lat))))) (apply deep (append args (list (cdr lat))))))
+      ((equal? mode 'and) (and (apply flat (append args (list (list (car lat))))) (apply deep (append args (list (cdr lat))))))
+      ((equal? mode 'or) (or (apply flat (append args (list (list (car lat))))) (apply deep (append args (list (cdr lat))))))
       )))
 
 (define consApplyDeepOrFlatHeadApplyDeepTail
@@ -451,13 +447,13 @@
 ;(eqlist '(2 4) '(2 4 3))
 ;(eqlist '(2 4 3) '(2 4 3))
 
-
-(define equal	
+;наиболее общая сравнялка, сравнивает все, даже списки (структурно и глубоко)
+(define equal?	
   (lambda (x y)
     (if
      (and (pair? x) (pair? y))
      (eqlist? x y)
-     (and (eqan? x y)))))
+     (eqan? x y))))
 ;(equal? '(((bar 2 (with whiskey 4))) foo (coffee) 3) '(((bar 2 (with whiskey 4))) foo (coffee) 3))
 ;(equal? '(2 4 3) '(2 4))
 ;(equal? '(2 4) '(2 4 3))
@@ -465,3 +461,64 @@
 ;(equal? 'foo 'foo)
 ;(equal? 'foo '())
 ;(equal? 4 42)
+
+(define multiinsertLR&co
+  (lambda (new oldL oldR lat col)
+    (cond
+      ((null? lat) (col '() 0 0))
+      ((eq? oldL (car lat)) (multiinsertLR&co
+                             new
+                             oldL
+                             oldR
+                             (cdr lat)
+                             (lambda (newLat visitedL visitedR)
+                               (col (cons new (cons oldL newLat)) (add1 visitedL) visitedR))))
+      ((eq? oldR (car lat))(multiinsertLR&co
+                            new
+                            oldL
+                            oldR
+                            (cdr lat)
+                            (lambda (newLat visitedL visitedR)
+                              (col (cons oldR (cons new newLat)) visitedL (add1 visitedR)))))
+      (else (multiinsertLR&co
+             new
+             oldL
+             oldR
+             (cdr lat)
+             (lambda (newLat visitedL visitedR)
+               (col (cons (car lat) newLat) visitedL visitedR))))
+      )))
+
+(define lat '(1 2 3 foo shouldBeAppended shouldBePrepended bar baz shouldBePrepended))
+(define (tap . args)
+  (display args))
+;(multiinsertLR&co 'added 'shouldBePrepended 'shouldBeAppended lat tap)
+
+(define multirember&co
+  (lambda (a lat col)
+    (cond
+      ((null? lat) (col '() '()))
+      ((eq? a (car lat)) (multirember&co
+                          a
+                          (cdr lat)
+                          (lambda (cutted visited)
+                            (col cutted (cons a visited)))))
+      (else (multirember&co
+             a
+             (cdr lat)
+             (lambda (cutted visited)
+               (col (cons (car lat) cutted) visited))))
+      )))
+(multirember&co 'shouldBePrepended lat tap)
+
+
+(define even?
+  (lambda (n)
+    (cond
+      ((zero? n) #t)
+      ((one? n) #f)
+      (else (even? (➖ n 2)))
+      )))
+
+;(even? 4)
+
