@@ -509,7 +509,7 @@
              (lambda (cutted visited)
                (col (cons (car lat) cutted) visited))))
       )))
-(multirember&co 'shouldBePrepended lat tap)
+;(multirember&co 'shouldBePrepended lat tap)
 
 
 (define even?
@@ -522,3 +522,31 @@
 
 ;(even? 4)
 
+(define evens-only&co
+  (lambda (lat col)
+    (cond
+      ((null? lat) (col '() 1 0))
+      ((even? (car lat)) (evens-only&co
+                          (cdr lat)
+                          (lambda (evensOnly evensProduct oddSum)
+                            (col (cons (car lat) evensOnly) (× evensProduct (car lat)) oddSum))))
+      (else (evens-only&co
+                          (cdr lat)
+                          (lambda (evensOnly evensProduct oddSum)
+                            (col evensOnly evensProduct (➕ oddSum (car lat))))))
+      )))
+
+
+
+(evens-only&co '(1 2 3 4 5 6 7 8 9 10) tap)
+
+
+
+
+
+
+
+
+
+
+  
