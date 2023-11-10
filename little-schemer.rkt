@@ -859,25 +859,96 @@
 
 
 ((Y (lambda (only-even)
-     (lambda (l)
-       (cond
-         ((null? l) '())
-         ((even? (car l)) (cons (car l) (only-even (cdr l))))
-         (else (only-even (cdr l)))))))
-'(1 2 3 4 5 6 7 8 9 10))
+      (lambda (l)
+        (cond
+          ((null? l) '())
+          ((even? (car l)) (cons (car l) (only-even (cdr l))))
+          (else (only-even (cdr l)))))))
+ '(1 2 3 4 5 6 7 8 9 10))
 
  
 
 
 
 
+;1) (mk-length mk-length) //length
+;2) mk-length === fn (mk-length)
+
+
+
+;length n->n+1
+(lambda (length)
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l)))))))
+
+;переход от верхней к нижней - самый сложный для вкуривания
+
+;mk-length
+(lambda (mk-length)
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 ((mk-length mk-length) (cdr l)))))))
+
+;length
+(((lambda (mk-length)
+    (mk-length mk-length))
+  (lambda (mk-length)
+    (lambda (l)
+      (cond
+        ((null? l) 0)
+        (else (add1 ((mk-length mk-length) (cdr l))))))))
+ '(1 2 3 4 5 6 7 8 9))
+
+
+
+
+;length с вынесенным mk-length mk-length
+;НЕ РАБОТАЕТ
+;ДАЕТ OUT OF MEMORY
+;ПОТОМУ ЧТО РЕКУРСИЯ ИДЕТ НЕ ТУДА: РЕКУРСИЯ НАЧИНАЕТСЯ ДО ВЫПОЛНЕНИЯ ТЕРМИНАЛЬНОГО УСЛОВИЯ
+;МОЖНО АБСТРАГИРОВАТЬ ЭТОТ ПРИМЕР
+'((((lambda (mk-length)
+      (mk-length mk-length))
+    (lambda (mk-length)
+      ((lambda (length)
+         (lambda (l)
+           (cond
+             ((null? l) 0)
+             (else (add1 (length (cdr l)))))))
+       (mk-length mk-length))))
+   '(1 2 3 4 5 6 7 8 9)))
+
+
+
+;А ВОТ ПОЧИНЕННЫЙ ВАРИАНТ, ПОЧИНКА ОБЕРТКОЙ
+;Т.Е. КОЛБЭК ЧИНИТ РЕКУРСИЮ, ПОТОМУ ЧТО РЕКУРСИРОВАТЬ НАЧИНАЕМ НЕ ДО ТЕРМИНАЛЬНОГО УСЛОВИЯ,
+;КАК РАНЬШЕ, А ПОСЛЕ, В МОМЕНТ ВЫЗОВА КОЛБЭКА
+(((lambda (mk-length)
+    (mk-length mk-length))
+  (lambda (mk-length)
+    ((lambda (length)
+       (lambda (l)
+         (cond
+           ((null? l) 0)
+           (else (add1 (length (cdr l)))))))
+     (lambda (x)
+       ((mk-length mk-length) x)))))
+ '(1 2 3 4 5 6 7 8 9))
 
 
 
 
 
-
-
-
-
-
+;length с колбэком вокруг (mk-length mk-length)
+'((((lambda (mk-length)
+      (mk-length mk-length))
+    (lambda (mk-length)
+      (lambda (l)
+        (cond
+          ((null? l) 0)
+          (else (add1 ((lambda (x)
+                         ((mk-length mk-length) x)) (cdr l))))))))
+   '(1 2 3 4 5 6 7 8 9)))
