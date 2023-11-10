@@ -952,3 +952,18 @@
           (else (add1 ((lambda (x)
                          ((mk-length mk-length) x)) (cdr l))))))))
    '(1 2 3 4 5 6 7 8 9)))
+
+
+
+;rember
+;И ТАК МОЖНО ЗАМЕНИТЬ ЛЮБУЮ ФУНКЦИЮ
+;ВООБЩЕ ЛЮБУЮ, С ЛЮБЫМ ЧИСЛОМ АРГУМЕНТОВ
+(((lambda (mkFn)
+    (mkFn mkFn mkFn))
+  (lambda (mkFn mkFn1)
+    (lambda (a lat)
+      (cond
+        ((null? lat) '())
+        ((equal? a (car lat)) ((mkFn mkFn1 mkFn1) a (cdr lat)))
+        (else (cons (car lat) ((mkFn mkFn1 mkFn1) a (cdr lat))))))))
+ 1 '(1 2 3 4 5 6 7 8 9 1))
