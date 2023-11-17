@@ -1,0 +1,9 @@
+#lang scheme
+(define-module (test_module)
+    #: export (square
+               cube))
+
+(define (square a)
+    (* a a))
+(define (cube a)
+    (* a a a))

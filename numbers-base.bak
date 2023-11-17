@@ -1,0 +1,11 @@
+#lang scheme
+
+(define sub1
+  (lambda (x)
+    (- x 1)))
+
+;(sub1 42)
+
+(define add1
+  (lambda (x)
+    (+ x 1)))

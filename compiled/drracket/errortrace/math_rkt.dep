@@ -1,0 +1,1 @@
+("8.10" ta6nt ("9efbd20f1b36529106d3a4dc7b07ba12a8f8fb00" . "98dcebf130350e81c5c3bbf1d594d8eb119709d0") #"C:\\Users\\curious_andrew\\Documents\\scheme\\numbers-base.rkt" (collects #"drracket" #"private" #"drracket-errortrace-key.rkt") (collects #"scheme" #"main.rkt") (collects #"scheme" #"runtime-config.rkt"))
