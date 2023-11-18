@@ -48,7 +48,7 @@
 (define firsts
   (lambda (l)
     (if
-     (null? l) '() (cons (car (car l)) (firsts (cdr l))))
+     (null? l) '() (cons (first (first l)) (firsts (cdr l))))
     ))
 
 ;(firsts '((potatoes carrots) (apples) (tea coffee)))
@@ -499,7 +499,7 @@
      (and (atom? aexp) (number? aexp))
      (and (numbered? (left-operand aexp)) (numbered? (right-operand aexp)) (isOp? (operator aexp))))))
 
-(numbered? '(1 + (4 + 21)))
+;(numbered? '(1 + (4 + 21)))
 
 
 (define value
@@ -508,7 +508,7 @@
      (atom? aexp) aexp
      ((getOp (operator aexp)) (value (left-operand aexp)) (value (right-operand aexp))))))
 
-(value '(1 + (4 ↑ 2)))
+;(value '(1 + (4 ↑ 2)))
 
 
 
@@ -520,6 +520,10 @@
 
 ;(set? '(1 2 3 4 5 6 1))
 
+
+(define identity
+  (lambda (x)
+    x))
 
 (define _reverse
   (lambda (lat cb)
@@ -534,8 +538,7 @@
 
 (define reverse
   (lambda (lat)
-    (_reverse lat (lambda lat
-                    (car lat)))))
+    (_reverse lat identity)))
 
 ;(reverse '(1 2 3 4 5 6 1))
 ;(reverse '(1 ))
@@ -544,5 +547,144 @@
 ;((lambda lat lat)'(1 2 3))
 
 
+;удаляющий первые вхождения
+(define _makeset
+  (lambda (lat)
+    (cond
+      ((null? lat) '())
+      ((member? (car lat) (cdr lat)) (_makeset(cdr lat)))
+      (else (cons (car lat) (_makeset (cdr lat)))
+            ))))
 
-    
+;(_makeset '(1 2 3 4 5 6 1))
+
+;удаляющий последующие
+(define makeset
+  (lambda (lat)
+    (reverse (_makeset (reverse lat)))))
+
+;(makeset '(1 2 3 4 5 6 1 1 1))
+
+
+(define makesetMultirember
+  (lambda (lat)
+    (if (null? lat) '() (cons (car lat) (multirember (car lat) (cdr lat))))))
+
+;(makesetMultirember '(1 2 3 4 5 6 1 1 1))
+
+(define subset?
+  (lambda (set1 set2)
+    (if
+     (null? set1)
+     #t
+     (and (member? (car set1) set2) (subset? (cdr set1) set2))
+     )))
+
+(define eqset?
+  (lambda (set1 set2)
+    (and (subset? set1 set2) (subset? set2 set1))))
+
+
+(define intersect?
+  (lambda (set1 set2)
+    (and
+     (not (null? set1))
+     (or  (member? (car set1) set2) (intersect? (cdr set1) set2)))))
+
+;(intersect? '(apple juice bread) '(whiskey wine beer))
+;(intersect? '(apple juice bread) '(whiskey wine beer juice))
+
+(define intersect
+  (lambda (set1 set2)
+    (if
+     (null? set1)
+     '()
+     (append
+      (if (member? (car set1) set2) (cons (car set1) '()) '())
+      (intersect (cdr set1) set2)))))
+
+;(intersect '(apple juice bread) '(whiskey wine beer juice))
+
+(define union
+  (lambda (set1 set2)
+    (makeset (append set1 set2))))
+;(union '(apple juice bread) '(whiskey wine beer juice))
+
+(define xxx
+  (lambda (set1 set2)
+    (if
+     (null? set2) set1
+     (xxx (multirember (car set2) set1) (cdr set2)))))
+
+;(xxx '(apple juice bread) '(whiskey wine beer juice))
+
+(define intersectall
+  (lambda (l-set)
+    (cond
+      ((null? (cdr l-set)) (car l-set))
+      (else (intersect (car l-set) (intersectall (cdr l-set)))))))
+
+;(intersectall '((apple juice bread) (whiskey wine beer juice) (apple cider juice)))
+
+
+(define a-pair?
+  (lambda (x)
+    (and
+     (pair? x) (pair? (cdr x)) (null? (cdr (cdr x))))))
+
+;(a-pair? '(1))
+;(a-pair? '(1 42))
+;(a-pair? '(1 42 43))
+
+
+(define first
+  (lambda (p)
+           (car p)))
+
+
+(define second
+  (lambda (p)
+    (car (cdr p))))
+
+
+(define  build
+  (lambda (s1 s2)
+    (cons s1 (cons s2 '()))))
+
+(define third
+  (lambda (x)
+    (first (second x))))
+
+
+(define rel?
+  (lambda (l)
+    (cond
+      ((null? l) #t)
+      (else (and (a-pair? (car l)) (rel? (cdr l)))))))
+
+;(rel? '((1 2) (4 2)))
+
+
+(define fun?
+  (lambda (l)
+    (set? (firsts l))))
+
+
+;(fun? '((1 2) (4 2)))
+
+(define revrel
+  (lambda (rel)
+    (cond
+      ((null? rel) '())
+      (else (cons (reverse (first rel)) (revrel (cdr rel)))))))
+
+;(revrel '((1 2) (4 2)))
+
+
+(define one-to-one?
+  (lambda (rel)
+    (fun? (revrel rel))))
+
+(one-to-one? '((1 2) (4 3)))
+
+
