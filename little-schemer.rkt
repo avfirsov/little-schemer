@@ -1,5 +1,7 @@
 #lang scheme
 (require "math.rkt")
+(provide (all-defined-out) (all-from-out))
+
 
 
 ; atom - это любой НЕ список
@@ -502,11 +504,11 @@
 ;(numbered? '(1 + (4 + 21)))
 
 
-(define value
-  (lambda (aexp)
-    (if
-     (atom? aexp) aexp
-     ((getOp (operator aexp)) (value (left-operand aexp)) (value (right-operand aexp))))))
+'((define value
+    (lambda (aexp)
+      (if
+       (atom? aexp) aexp
+       ((getOp (operator aexp)) (value (left-operand aexp)) (value (right-operand aexp)))))))
 
 ;(value '(1 + (4 ↑ 2)))
 
@@ -639,7 +641,7 @@
 
 (define first
   (lambda (p)
-           (car p)))
+    (car p)))
 
 
 (define second
@@ -653,7 +655,7 @@
 
 (define third
   (lambda (x)
-    (first (second x))))
+    (car (cdr (cdr x)))))
 
 
 (define rel?
@@ -687,4 +689,59 @@
 
 (one-to-one? '((1 2) (4 3)))
 
+
+(define entry1 '((appetizer entree beverage)
+                 (pate boeuf vin)))
+
+(define entry2 '(((beverage dessert)
+                  ((food is) (number one with us)))))
+
+(define entry3 '((entree dessert)
+                 (spaghetti spumoni)))
+
+
+(define look-up-in-entry
+  (lambda (name entry entry-f)
+    (look-up-in-entry-helper
+     name
+     (first entry)
+     (second entry)
+     entry-f)))
+             
+(define look-up-in-entry-helper
+  (lambda (name keys values entry-f)
+    (cond
+      ((null? keys) (entry-f name))
+      ((eq? (first keys) name) (first values))
+      (else (look-up-in-entry-helper
+             name
+             (cdr keys)
+             (cdr values)
+             entry-f)))))
+      
+(define new-entry build)
+
+
+;(look-up-in-entry 'appetizer entry1 identity)
+
+
+(define extend-table cons)
+
+
+(define lookup-in-table
+  (lambda (name table table-f)
+    (cond
+      ((null? table) (table-f name))
+      (else (look-up-in-entry
+             name
+             (first table)
+             (lambda (unusedName)
+               (lookup-in-table
+                name
+                (cdr table)
+                table-f)
+               ))))))
+
+
+;(lookup-in-table 'entree (cons entry1 (build entry2 entry3)) identity)
 

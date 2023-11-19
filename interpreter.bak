@@ -1,0 +1,239 @@
+#lang scheme
+
+;Entry === ((ids) (vals))
+;action === (expression: string, table: Table<Entry>) => Value
+;название action всегда начинается с *
+(define expression-to-action
+  (lambda (e)
+    (cond
+      ((atom? e) (atom-to-action e))
+      (else (list-to-action e))))) 
+
+;ВНИМАНИЕ! для создания строковых литералов НЕЛЬЗЯ использовать 'LITERAL_VALUE, только (quote LITERAL_VALUE)
+(define atom-to-action
+  (lambda (e)
+    (cond
+      ((number? e) *const)
+      ((eq? e #t) *const)
+      ((eq? e #f) *const)
+      ((eq? e (quote cons)) *const)
+      ((eq? e (quote car)) *const)
+      ((eq? e (quote cdr)) *const)
+      ((eq? e (quote null?)) *const)
+      ((eq? e (quote eq?)) *const)
+      ((eq? e (quote atom?)) *const)
+      ((eq? e (quote zero?)) *const)
+      ((eq? e (quote add1)) *const)
+      ((eq? e (quote sub1)) *const)
+      ((eq? e (quote number?)) *const)
+      (else *identifier))))
+
+
+(define list-to-action
+  (lambda (e)
+    (cond
+      ((atom? (car e))
+       (cond
+         ((eq? (car e) (quote quote))
+          *quote)
+         ((eq? (car e) (quote lambda))
+          *lambda)
+         ((eq? (car e) (quote cond))
+          *cond)
+         (else *application)))
+      (else *application))))
+
+
+;верхнеуровневый вызов meaning с чистой таблицей
+;точка входа
+(define value
+  (lambda (e)
+    (meaning e (quote ()))))
+
+;превращает экспрешен в экшен и вызывает экшен с экшеном itself и текущей таблицей
+(define meaning
+  (lambda ( e table)
+    ( ( expression-to-action e) e table))) 
+
+
+;экшен для констант И известных примитивов (про которые известно заранее что они делают)
+;для булей и чисел - возвращает их самих, для остальных (функций) - презентацию вида '(primitive e)
+(define *const
+  (lambda ( e table)
+    (cond
+      ((number? e) e)
+      (( eq? e #t) #t)
+      ((eq? e #f) #f)
+      (else (build (quote primitive) e)))))
+
+
+;(value '(quote foo))
+
+;экшен для литералов - заменяем их текстовым представлением
+(define *quote
+  (lambda ( e table)
+    (text-of e))) 
+
+(define text-of second)
+
+
+;экшен для идентефикаторов
+;берем их из таблицы, иначе - ошибка (если не найден)
+(define *identifier
+  (lambda (e table)
+    (lookup-in-table e table initial-table)))
+
+;кинет ошибку, не должен вызываться
+(define initial-table
+  (lambda (name)
+    (cons '())))
+
+
+;экшен для лямбд. Они всегда преобразуются в следующую репрезентацию: (non-primitive CLOSURE_RECORD<table>)
+(define *lambda
+  (lambda (e table)
+    ( build (quote non-primitive)
+            ( cons table ( cdr e)))))
+
+;хелперы для работы с CLOSURE_RECORD = (table formals body)
+(define table-of first)
+(define formals-of second)
+(define body-of third)
+
+;eval для cond
+;принимает на вход тело cond - список((else foo) (...))
+(define evcon
+  (lambda (lines table)
+    (cond
+      (
+       (else? (question-of (car lines)))
+       (meaning
+        (answer-of ( car lines)) table)
+       )
+      (
+       (meaning (question-of ( car lines)) table)
+       (meaning ( answer-of ( car lines)) table)
+       )
+      (
+       else
+       (evcon (cdr lines) table)
+       ))))
+
+
+;тру если текущий атом - else
+(define else?
+  (lambda (e)
+    (and (atom? e) (eq? e 'else))))
+;хелперы для получения условия и ответа из строчки cond
+(define question-of first)
+(define answer-of second)
+
+;экшен для (cond (...))
+(define *cond
+  (lambda (e table)
+    (evcon (cond-lines-of e) table)))
+
+(define cond-lines-of cdr)
+
+
+;хелпер, эвалюирует аргументы функции - заменяет их на конкретные вэльюсы
+(define evlis
+  (lambda (r-args table)
+    (if
+     (null? r-args)
+     '()
+     (cons (meaning (first r-args) table) (evlis (cdr r-args) table)))))
+
+
+
+
+;экшен для вызовов.
+;сначала эвалюирует функцию (переводит в репрезентацию), потом - аргументы, а потом - передает это в apply
+(define *application
+  (lambda ( e table)
+    ( apply
+      ( meaning (function-of e) table)
+      ( evlis ( arguments-of e) table))))
+
+
+(define function-of car)
+
+(define arguments-of cdr)
+
+(define primitive?
+  (lambda (l)
+    (eq? (first l) 'primitive)))
+
+(define non-primitive?
+  (lambda (l)
+    (eq? (first l) 'non-primitive)))
+
+
+;fun - репрезентация функции - (primitive <BODY_EXPR>) | (non-primitive <BODY_EXPR>)
+;vals - уже проэвалюированные аргументы (список)
+(define apply
+  (lambda (fun vals)
+    (cond
+      ((primitive? fun)
+       ( apply-primitive
+         (second fun) vals))
+      ((non-primitive? fun)
+       ( apply-closure
+         (second fun) vals))))) 
+
+
+
+(define apply-primitive
+  (lambda (name vals)
+    (cond
+      (( eq? name  'cons)
+       ( cons (first vals) (second vals)))
+      ((eq? name (quote car))
+       ( car (first vals)))
+      ((eq? name (quote cdr))
+       ( cdr (first vals)))
+      ( ( eq? name (quote null?))
+        (null? (first vals)))
+      ((eq? name (quote eq?))
+       ( eq? (first vals) (second vals) ))
+      (( eq? name (quote atom?))
+       ( :atom? (first vals)))
+      (( eq? name (quote zero?))
+       (zero? (first vals)))
+      ((eq? name (quote add1))
+       ( add1 (first vals)))
+      ((eq? name (quote sub1))
+       (sub1 (first vals)))
+      (( eq? name (quote number?))
+       (number? (first vals)))))) 
+
+
+
+
+(define :atom?
+  (lambda (x )
+    (cond
+      (( atom? x ) #t)
+      ((null? x ) #f)
+      ((eq? ( car x ) (quote primitive))
+       #t)
+      ((eq? ( car x ) (quote non-primitive))
+       #t)
+      (else #f ) ))) 
+
+
+;closure - CLOSRE_RECORD, vals - проэвалюированные аргументы (список)
+;дополняет TABLE из CLOSRE_RECORD ((args) (vals))
+;и вычисляет meaning 
+(define apply-closure
+  (lambda ( closure vals)
+    (meaning ( body-of closure)
+             ( extend-table
+               (new-entry
+                (formals-of closure)
+                vals)
+               ( table-of closure))))) 
+
+
+(value '(add1 5))
+(value '((lambda (x cb)(cb (add1 x))) 42 add1))
